@@ -1,0 +1,123 @@
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date:    16:22:31 07/03/2021 
+-- Design Name: 
+-- Module Name:    ALUckt - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity ALUckt is
+	port(
+		A : in std_logic_vector(3 downto 0);
+		B : in std_logic_vector(3 downto 0);
+		Y : out std_logic_vector(3 downto 0);
+	  F  : in std_logic_vector(2 downto 0);
+  Cout  : out std_logic
+
+	);
+end ALUckt;
+
+	architecture Behavioral of ALUckt is
+	component mux1
+		port(
+			A,B : in std_logic_vector(3 downto 0);
+			S     : in std_logic;
+			Y     : out std_logic_vector(3 downto 0)
+		
+		);
+	end component;
+	
+	component fourBitFullAdder 
+		port(
+			C0 : in std_logic;
+		  A,B : in std_logic_vector(3 downto 0); 
+			 S : out std_logic_vector(3 downto 0);
+		C_out : out std_logic		 
+		);
+	end component;
+	
+	component zeroExtension 
+		port(
+			A : in std_logic;
+			B : out std_logic_vector(3 downto 0)
+		);
+	end component;
+	
+	component mux2 
+		port(
+			A,B,C,D : in std_logic_vector(3 downto 0);
+			S       : in std_logic_vector(1 downto 0);
+			Y       : out std_logic_vector(3 downto 0)
+		);
+	end component;
+	
+	signal B_M : std_logic_vector(3 downto 0);
+	
+	signal muxOut: std_logic_vector(3 downto 0);
+signal andOut: std_logic_vector(3 downto 0);
+signal orOut : std_logic_vector(3 downto 0);
+--signal sum   : std_logic_vector(3 downto 0);
+signal adderOut : std_logic_vector(3 downto 0);
+signal extensionOut : std_logic_vector(3 downto 0);
+
+
+begin
+	B_M <= not B;
+	
+	
+	muxOne : mux1 port map(
+		A => B,
+		B => B_M,
+		S => F(2),
+		Y => muxOut
+		
+	);
+	
+	andOut <= muxOut and A;
+	orOut  <= muxOut or A;
+	
+	Adder : fourBitFullAdder port map(
+		A => A,
+		B => muxOut, 
+	  C0 => F(2),
+  C_out => Cout,
+      S => adderOut
+		
+	);
+
+	zeroExtender : zeroExtension port map(
+		A => adderOut(3),
+		B => extensionOut
+	);
+	
+	muxTwo : mux2 port map(
+		A => andOut,
+		B => orOut,
+		C => adderOut,
+		D => extensionOut,
+		Y => Y,
+		S => F(1 downto 0)
+	);
+end Behavioral;
